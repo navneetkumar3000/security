@@ -1,0 +1,227 @@
+1️⃣ High-Level Architecture (HackerRank-style)
+========================================================================================================================
+Client (Web / Mobile)
+        |
+        |---- Username + Password
+        |---- Google OAuth
+        |---- GitHub OAuth
+        |
+Spring Boot Backend
+        |
+        |---- Spring Security
+        |---- JWT Filter
+        |---- OAuth2 Client
+        |
+Database (MySQL / PostgreSQL)
+========================================================================================================================
+2️⃣ Authentication Flow (Very Important)
+========================================================================================================================
+🔐 Flow 1: Normal Login + JWT
+========================================================================================================================
+User → /register → save user (BCrypt password)
+User → /login → authenticate → generate JWT
+Client → sends JWT in Authorization header
+========================================================================================================================
+🔐 Flow 2: OAuth Login (Google / GitHub)
+========================================================================================================================
+User → Login with Google
+Google → Redirect to backend
+Backend → Verify user → generate JWT
+Frontend → Store JWT → use like normal login
+OAuth is only for identity verification
+JWT is still used for API security
+========================================================================================================================
+3️⃣ Tech Stack
+========================================================================================================================
+Layer	                                                    Tech
+Backend	                                                Spring Boot 3
+Security	                                            Spring Security 6
+Auth	                                                JWT + OAuth2
+DB	                                                    MySQL / PostgreSQL
+ORM	                                                    Spring Data JPA
+Password	                                            BCrypt
+OAuth	                                                Google / GitHub
+========================================================================================================================
+4️⃣ Maven Dependencies
+========================================================================================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.10</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.example</groupId>
+	<artifactId>demo</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>demo</name>
+	<description>Demo project for Spring Boot</description>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
+	<properties>
+		<java.version>17</java.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- JWT -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+
+		<!-- OAuth2 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
+
+		<!-- JPA -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
+========================================================================================================================
+OAuth Configuration (Google Example)
+========================================================================================================================
+click the below link
+👉 https://console.cloud.google.com
+
+Go to Select Project ---> New Project --> Name (spring-oauth-google) ---> create
+
+Go to API & Services ---> OAuth consent screen
+Click on Get Started
+Project Name :
+name
+email
+Audience :
+External
+Contact Information :
+developer email id
+
+agree
+create
+
+Go to
+APIs & Services → Credentials
+Application Type -> Web Application
+Authorized Redirect URI -> http://localhost:8080/login/oauth2/code/google
+create
+client-id
+client-secret-id
+========================================================================================================================
+Application yml file configuration
+========================================================================================================================
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: YOUR_CLIENT_ID
+            client-secret: YOUR_CLIENT_SECRET
+            scope:
+              - email
+              - profile
+========================================================================================================================
+Scope	                      What you get
+email	                    User’s email address + verified flag
+profile	                    Name, profile picture, Google ID
+========================================================================================================================
+How to set environmental value like password
+========================================================================================================================
+✅ OPTION 1: Set environment variable in OS (BEST PRACTICE)
+🔹 Windows (PowerShell)
+setx DB_PASSWORD "your_postgres_password"
+👉 Close & reopen IDE / terminal after this.
+🔹 Linux / macOS
+export DB_PASSWORD=your_postgres_password
+🔹 Verify it is set
+echo $DB_PASSWORD       # Linux / macOS
+echo %DB_PASSWORD%     # Windows cmd
+========================================================================================================================
+✅ OPTION 2: IntelliJ / Eclipse Run Configuration (Most Common)
+IntelliJ IDEA
+Run → Edit Configurations
+Select your Spring Boot app
+Environment variables
+Add:
+DB_PASSWORD=your_postgres_password
+Apply → Run
+========================================================================================================================
+✅ OPTION 3: .env file (Clean & safe)
+Create .env
+DB_PASSWORD=your_postgres_password
+Add .env to .gitignore
+.env
+Add dependency (optional but nice if you add)
+<dependency>
+  <groupId>io.github.cdimascio</groupId>
+  <artifactId>dotenv-java</artifactId>
+  <version>3.0.0</version>
+</dependency>
+========================================================================================================================
+✅ OPTION 4: Default value (NOT for prod)
+password: ${DB_PASSWORD:postgres}
+If env variable missing → uses postgres.
+========================================================================================================================
